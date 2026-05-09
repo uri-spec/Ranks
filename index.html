@@ -22,6 +22,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .branch-sub{font-size:11px;color:#888;margin-top:3px;}
 .start-btn{display:block;width:100%;padding:13px;background:#1a1a2e;color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:opacity 0.15s;}
 .start-btn:disabled{opacity:0.3;cursor:default;}
+.compare-btn{display:block;width:100%;padding:12px;background:#fff;color:#16a34a;border:2px solid #16a34a;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:10px;transition:all 0.15s;}
+.compare-btn:hover{background:#f0fdf4;}
 
 /* QUIZ */
 .progress-wrap{margin-bottom:1.2rem;}
@@ -103,6 +105,50 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
   </div>
   <button class="start-btn" id="start-btn" onclick="startGame()" disabled>Choose a branch to begin</button>
+  <button class="compare-btn" onclick="startCompare()">⚖️ Compare Branches: IDF vs US Army</button>
+</div>
+
+<div id="screen-compare" class="screen">
+  <div class="progress-wrap">
+    <div class="progress-meta">
+      <span id="cq-label">Question 1 of 9</span>
+      <span id="cq-score">Score: 0 / 0</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill fill-idf" id="cq-prog" style="width:0%"></div></div>
+  </div>
+  <div class="rank-card">
+    <div><span class="branch-badge badge-idf">IDF → US Army</span></div>
+    <div class="rank-img-wrap"><img id="cq-img" class="rank-img" src="" alt="IDF rank"/></div>
+    <div style="font-size:15px;font-weight:600;color:#1a1a2e;margin:8px 0 4px;" id="cq-idf-name"></div>
+    <div style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:0.07em;">What is the equivalent US Army rank?</div>
+  </div>
+  <div class="options-grid" id="cq-options"></div>
+  <div class="feedback-wrong" id="cq-feedback"><span>✕</span><span>Not quite — try another option</span></div>
+  <div class="dyk-box" id="cq-dyk">
+    <div class="dyk-label">💡 Did you know?</div>
+    <div class="dyk-text" id="cq-dyk-text"></div>
+  </div>
+  <button class="next-btn" id="cq-next" onclick="nextCompareQ()">Next →</button>
+</div>
+
+<div id="screen-compare-bonus" class="screen">
+  <div class="rank-card" style="margin-bottom:1.2rem;">
+    <div><span class="branch-badge badge-army">US Army — Bonus Rank</span></div>
+    <div class="rank-img-wrap"><img src="" id="bonus-img" class="rank-img" alt="General insignia"/></div>
+    <div style="font-size:16px;font-weight:700;color:#1a1a2e;margin-top:10px;">General (4-star) · O-10</div>
+  </div>
+  <div class="dyk-box show" style="margin-bottom:1.2rem;">
+    <div class="dyk-label">💡 The extra US Army rank</div>
+    <div class="dyk-text" id="bonus-dyk-text"></div>
+  </div>
+  <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:1.2rem;font-size:13px;color:#854d0e;line-height:1.6;">
+    <strong>Key difference:</strong> The IDF has 9 commissioned officer ranks topped by Rav Aluf (equivalent to a 3-star Lieutenant General). The US Army has 10, with a 4-star General above that — plus the historic 5-star General of the Army, a wartime-only rank last awarded in WWII.
+  </div>
+  <div class="action-row">
+    <button class="action-btn action-secondary" onclick="goMenu()">← Main menu</button>
+    <button class="action-btn action-primary" onclick="startCompare()">Play again</button>
+  </div>
+  <div style="margin-top:2rem;font-size:12px;color:#aaa;text-align:center;">Developed by Uri Rivner — May 2026</div>
 </div>
 
 <div id="screen-quiz" class="screen">
@@ -396,6 +442,119 @@ function showResults(){
 }
 
 function goMenu(){showScreen('menu');}
+
+// ── COMPARE MODE ──────────────────────────────────────────────────────────────
+
+// IDF rank → equivalent Army rank + Army DYK for comparison
+const COMPARE_DATA = [
+  { idfId:"idf_O1", idfName:"סגן משנה (Segen Mishne)", idfGrade:"Second Lieutenant",
+    armyId:"army_O1", armyName:"Second Lieutenant", armyGrade:"O-1",
+    dyk:"Both the IDF Segen Mishne and US Army Second Lieutenant lead platoons of 30-40 soldiers. But the IDF commissions officers at 19-20 directly from compulsory service, while most US Army 2nd Lts are 22+ after ROTC or West Point." },
+  { idfId:"idf_O2", idfName:"סגן (Segen)", idfGrade:"First Lieutenant",
+    armyId:"army_O2", armyName:"First Lieutenant", armyGrade:"O-2",
+    dyk:"A US Army First Lieutenant typically serves as a platoon leader or executive officer. The silver bar dates back to WWI. Israel's Segen often commands a platoon in one of the IDF's elite combat units, some of the most battle-tested formations in the world." },
+  { idfId:"idf_O3", idfName:"סרן (Seren)", idfGrade:"Captain",
+    armyId:"army_O3", armyName:"Captain", armyGrade:"O-3",
+    dyk:"US Army Captains command companies of 60-200 soldiers and wear two silver bars. The IDF Seren ('axle') similarly commands a company — the primary tactical unit in both armies. Famous IDF Serens include many who later became generals." },
+  { idfId:"idf_O4", idfName:"רב-סרן (Rav Seren)", idfGrade:"Major",
+    armyId:"army_O4", armyName:"Major", armyGrade:"O-4",
+    dyk:"US Army Majors wear a gold oak leaf and often serve as battalion staff officers or executive officers — the key planners of operations. The IDF Rav Seren is the first career-only rank; notable holders include Yoni Netanyahu, who held this rank before his death leading Operation Entebbe in 1976." },
+  { idfId:"idf_O5", idfName:"סגן-אלוף (Sgan Aluf)", idfGrade:"Lieutenant Colonel",
+    armyId:"army_O5", armyName:"Lieutenant Colonel", armyGrade:"O-5",
+    dyk:"US Army Lieutenant Colonels wear a silver oak leaf and command battalions of 300-1,000 soldiers — one of the most prestigious commands in the Army. The IDF Sgan Aluf ('deputy champion') similarly commands a battalion, the IDF's primary combined-arms fighting formation." },
+  { idfId:"idf_O6", idfName:"אלוף משנה (Aluf Mishne)", idfGrade:"Colonel",
+    armyId:"army_O6", armyName:"Colonel", armyGrade:"O-6",
+    dyk:"US Army Colonels wear the silver eagle and command brigades of 3,000-5,000 soldiers. The IDF Aluf Mishne commands brigades that are often larger than Western equivalents. Both armies require Senate/government confirmation for promotions above this level." },
+  { idfId:"idf_O7", idfName:"תת-אלוף (Tat Aluf)", idfGrade:"Brigadier General",
+    armyId:"army_O7", armyName:"Brigadier General", armyGrade:"O-7",
+    dyk:"The US Army Brigadier General (one star) is the entry point to general officer ranks. Every promotion requires Senate confirmation. The IDF Tat Aluf typically commands a division or heads a major directorate — a broader scope than most one-star NATO generals." },
+  { idfId:"idf_O8", idfName:"אלוף (Aluf)", idfGrade:"Major General",
+    armyId:"army_O8", armyName:"Major General", armyGrade:"O-8",
+    dyk:"US Army Major Generals (two stars) typically command divisions of 10,000-15,000 soldiers. Famous holders include Omar Bradley in WWII. The IDF Aluf commands corps or serves as a district commander — there are typically only 12-15 active Alufim at any time." },
+  { idfId:"idf_O9", idfName:"רב-אלוף (Rav Aluf)", idfGrade:"Chief of General Staff",
+    armyId:"army_O9", armyName:"Lieutenant General", armyGrade:"O-9",
+    dyk:"US Army Lieutenant Generals (three stars) command corps of 20,000-45,000 soldiers. The IDF's Rav Aluf is unique: only ONE exists at a time — the Ramatkal (Chief of General Staff). This makes the IDF's top rank equivalent to a 3-star, while the US Army continues to a 4-star General and a historic 5-star rank above that." },
+];
+
+const BONUS_DYKS = [
+  "Four-star Generals in the US Army have included legends like Dwight D. Eisenhower (later 34th President), Colin Powell (later Secretary of State), Norman Schwarzkopf (Desert Storm commander), and David Petraeus (Iraq & Afghanistan). Unlike the IDF's singular top commander, the US Army typically has around 11 active four-star generals at any time.",
+  "The Joint Chiefs of Staff consists of the Chairman, Vice Chairman, and the chiefs of each service branch: Army Chief of Staff, Chief of Naval Operations, Commandant of the Marine Corps, Chief of Staff of the Air Force, Chief of Space Operations, and Chief of the National Guard Bureau. Each service chief is a four-star officer. The Chairman is the highest-ranking military officer and principal military adviser to the President, Secretary of Defense, and National Security Council.",
+  "The Chairman of the Joint Chiefs is appointed by the President, confirmed by the Senate, and serves a two-year term (renewable once). By law, the role rotates among the service branches. The Chairman holds no command authority over US forces — operational command runs through the Secretary of Defense directly to Combatant Commanders. Recent Chairmen include General Mark Milley (Army, 2019-2023) and General CQ Brown (Air Force, 2023-).",
+  "The five-star General of the Army rank was awarded to just four officers: George C. Marshall, Douglas MacArthur, Dwight D. Eisenhower, and Henry 'Hap' Arnold — all in December 1944 during WWII. Congress created the rank so US commanders would not be outranked by Allied five-star officers. By law, five-star officers never fully retire and remain on active duty for life. No General of the Army has been appointed since WWII.",
+  "Famous four-star US Army Generals include: John 'Black Jack' Pershing (WWI commander, later promoted to six-star 'General of the Armies'), Omar Bradley (last living five-star, died 1981), Maxwell Taylor (Vietnam-era Chairman of the Joint Chiefs), Creighton Abrams (Vietnam commander, the M1 Abrams tank is named after him), and Eric Shinseki (Army Chief of Staff, famously predicted Iraq would need 'several hundred thousand' troops)."
+];
+
+let compareIdx = 0, compareScore = 0, compareAnswered = false, compareFirstGuess = true, bonusDykIdx = 0;
+
+function startCompare() {
+  compareIdx = 0; compareScore = 0; compareAnswered = false; compareFirstGuess = true;
+  bonusDykIdx = Math.floor(Math.random() * BONUS_DYKS.length);
+  showScreen('compare'); renderCompareQ();
+}
+
+function renderCompareQ() {
+  compareAnswered = false; compareFirstGuess = true;
+  const q = COMPARE_DATA[compareIdx];
+  const total = COMPARE_DATA.length;
+
+  document.getElementById('cq-label').textContent = 'Question ' + (compareIdx+1) + ' of ' + total;
+  document.getElementById('cq-score').textContent = 'Score: ' + compareScore + ' / ' + compareIdx;
+  document.getElementById('cq-prog').style.width = (compareIdx/total*100) + '%';
+  document.getElementById('cq-img').src = IMAGES[q.idfId];
+  document.getElementById('cq-idf-name').textContent = q.idfName + ' — ' + q.idfGrade;
+  document.getElementById('cq-feedback').classList.remove('show');
+  document.getElementById('cq-dyk').classList.remove('show');
+  document.getElementById('cq-next').classList.remove('show');
+
+  // Build 4 options with insignia images
+  const allArmy = COMPARE_DATA.map(r => ({id:r.armyId, name:r.armyName, grade:r.armyGrade}));
+  const wrong = shuffle(allArmy.filter(r => r.name !== q.armyName)).slice(0,3);
+  const opts = shuffle([{id:q.armyId, name:q.armyName, grade:q.armyGrade}, ...wrong]);
+
+  const grid = document.getElementById('cq-options');
+  grid.innerHTML = '';
+  grid.style.gridTemplateColumns = '1fr 1fr';
+  opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;';
+    btn.innerHTML = '<img src="' + IMAGES[opt.id] + '" style="max-width:80px;max-height:70px;object-fit:contain;" alt="' + opt.name + '"/><span style="font-size:12px;font-weight:600;line-height:1.3;">' + opt.name + '</span><span style="font-size:10px;color:#888;">' + opt.grade + '</span>';
+    btn.onclick = () => handleCompareAnswer(btn, opt.name, q);
+    grid.appendChild(btn);
+  });
+}
+
+function handleCompareAnswer(btn, chosen, q) {
+  if (compareAnswered) return;
+  if (chosen === q.armyName) {
+    compareAnswered = true;
+    if (compareFirstGuess) compareScore++;
+    btn.classList.add('correct');
+    document.querySelectorAll('#cq-options .opt-btn').forEach(b => b.disabled = true);
+    document.getElementById('cq-dyk-text').textContent = q.dyk;
+    document.getElementById('cq-dyk').classList.add('show');
+    document.getElementById('cq-next').classList.add('show');
+    document.getElementById('cq-feedback').classList.remove('show');
+    document.getElementById('cq-score').textContent = 'Score: ' + compareScore + ' / ' + (compareIdx+1);
+  } else {
+    compareFirstGuess = false;
+    btn.classList.add('wrong'); btn.disabled = true;
+    document.getElementById('cq-feedback').classList.add('show');
+    setTimeout(() => btn.classList.remove('wrong'), 400);
+  }
+}
+
+function nextCompareQ() {
+  compareIdx++;
+  if (compareIdx >= COMPARE_DATA.length) showCompareBonus();
+  else renderCompareQ();
+}
+
+function showCompareBonus() {
+  document.getElementById('bonus-img').src = IMAGES['army_O10'];
+  document.getElementById('bonus-dyk-text').textContent = BONUS_DYKS[bonusDykIdx];
+  showScreen('compare-bonus');
+}
 </script>
 </body>
 </html>
